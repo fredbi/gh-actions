@@ -4,14 +4,11 @@ permissions:
   contents: read
 
 # description: |
-#   Build a github release on pushed tag.
+#   Build a github release on either pushed tag or a manual workflow call.
 #
-#   The only available asset is a release note.
+#   At this moment, the only available asset is a release note.
 
 on:
-  push:
-    tags:
-      - v[0-9]+*
   workflow_call:
     inputs:
       tag:
@@ -36,15 +33,9 @@ jobs:
         # tag message is not retrieved unless with fetch the ref explictly
         run: |
           set -x
-          REF='${{ github.ref_name }}'
-          INPUT_TAG='${{ inputs.tag }}'
-          if [[ -n "${INPUT_TAG}" ]] ; then
-            # release workflow triggered from another workflow, not a push event
-            REF="${INPUT_TAG}"
-          fi
 
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          MESSAGE=$(git tag -l "${REF}" --format='%(contents:subject)
+          MESSAGE=$(git tag -l '${{ inputs.tag }}' --format='%(contents:subject)
 
           %(contents:body)
           ')
@@ -55,10 +46,11 @@ jobs:
             echo 'EOF'
           } >> "${GITHUB_OUTPUT}"
 
-          echo "Message in git tag ${REF}"
+          echo "Message in git tag ${{ inputs.tag }}"
           echo "$MESSAGE"
       -
         name: Generate release notes
+        # this uses git-cliff to generate a release note from the commit history
         id: notes
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -74,4 +66,4 @@ jobs:
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
           body: ${{ steps.notes.outputs.content }}
-          generate_release_notes: false
+          generate_release_notes: false # skip auto-generated release notes from github API

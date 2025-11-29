@@ -1,0 +1,30 @@
+name: Release on tag
+
+permissions:
+  contents: read
+
+# description: |
+#   Build a github release on pushed tag.
+#
+#   The only available asset is a release note.
+
+on:
+  push:
+    tags:
+      - v[0-9]+*
+
+jobs:
+  gh-release:
+    # trigger release creation explictly.
+    # The previous tagging action does not trigger the normal release workflow
+    # (github prevents cascading triggers from happening).
+    name: Create release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      -
+        uses: ./.github/workflows/release.yml
+        with:
+          tag: ${{ github.ref_name }}
+          secrets: inherit

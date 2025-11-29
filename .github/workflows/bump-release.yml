@@ -63,6 +63,7 @@ jobs:
         name: Bump release
         id: bump-release
         run: |
+          # determine next tag to push
           NEXT_TAG=""
           if   [[ '${{ inputs.bump-patch }}' == 'true' ]] ; then
             NEXT_TAG=$(svu patch)
@@ -71,17 +72,17 @@ jobs:
           elif [[ '${{ inputs.bump-major }}' == 'true' ]] ; then
             NEXT_TAG=$(svu major)
           else
-            echo "error::invalid options::One of bump-patch, bump-minor or bump-major must be true"
+            echo "::error::invalid options::One of bump-patch, bump-minor or bump-major must be true"
             exit 1
           fi
 
           if [[ -z "${NEXT_TAG}" ]] ; then
-            echo "error::something went wrong and no tag has been determined. Stopping here"
+            echo "::error::something went wrong and no tag has been determined. Stopping here"
             exit 1
           fi
 
           echo "next-tag=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
-          echo "notice title=next-tag:${NEXT_TAG}"
+          echo "::notice title=next-tag:${NEXT_TAG}"
       -
         name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
@@ -112,6 +113,7 @@ jobs:
             BODY=$(echo "${MESSAGE_BODY}"|tr '|' '\n')
             MESSAGE=$(printf "%s\n%s\n" "${MESSAGE}" "${BODY}")
           fi
+          echo "::notice title=tag-message:${MESSAGE}"
 
           git tag -s -m "${MESSAGE}" "${NEXT_TAG}"
           git tag -v "${NEXT_TAG}"
