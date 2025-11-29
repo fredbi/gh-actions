@@ -36,7 +36,7 @@ jobs:
         # tag message is not retrieved unless with fetch the ref explictly
         run: |
           set -x
-          REF='${{ github_ref_name }}'
+          REF='${{ github.ref_name }}'
           INPUT_TAG='${{ inputs.tag }}'
           if [[ -n "${INPUT_TAG}" ]] ; then
             # release workflow triggered from another workflow, not a push event
