@@ -48,6 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      next-tag: ${{ steps.bump-release.outputs.next-tag }}
     steps:
       -
         name: Checkout code
@@ -126,6 +128,7 @@ jobs:
       contents: write
     steps:
       -
-        uses: ./release.yml@master
+        uses: ./.github/workflows/release.yml
         with:
+          tag: ${{ needs.tag-release.outputs.next-tag}}
           secrets: inherit

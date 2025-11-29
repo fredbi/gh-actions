@@ -12,6 +12,11 @@ on:
   push:
     tags:
       - v[0-9]+*
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
 
 jobs:
   gh-release:
@@ -30,8 +35,16 @@ jobs:
         id: get-message
         # tag message is not retrieved unless with fetch the ref explictly
         run: |
+          set -x
+          REF='${{ github_ref_name }}'
+          INPUT_TAG='${{ inputs.tag }}'
+          if [[ -n "${INPUT_TAG}" ]] ; then
+            # release workflow triggered from another workflow, not a push event
+            REF="${INPUT_TAG}"
+          fi
+
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          MESSAGE=$(git tag -l '${{ github.ref_name }}' --format='%(contents:subject)
+          MESSAGE=$(git tag -l "${REF}" --format='%(contents:subject)
 
           %(contents:body)
           ')
@@ -42,7 +55,7 @@ jobs:
             echo 'EOF'
           } >> "${GITHUB_OUTPUT}"
 
-          echo "Message in git tag ${{ github.ref_name }}"
+          echo "Message in git tag ${REF}"
           echo "$MESSAGE"
       -
         name: Generate release notes
