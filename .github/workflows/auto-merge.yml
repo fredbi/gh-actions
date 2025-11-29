@@ -34,12 +34,14 @@ jobs:
         run: gh pr merge --auto --rebase "$PR_URL"
 
   # Auto merge for go-openapi bot
+  # The regular actions-bot user cannot approve and merge its own pull requests,
+  # we use another bot user to update content to be approved/auto-merged by actions-bot.
   actions-bot:
     permissions:
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.user.login == 'bot-go-openapi' }}
+    if: ${{ github.event.pull_request.user.login == 'bot-go-openapi[bot]' }}
     steps:
       -
         name: Auto-approve all bot-go-openapi PRs
