@@ -39,7 +39,7 @@ inputs:
     description: |
       GitHub token with permissions to read workflow runs.
 
-      Typically: ${{ secrets.GITHUB_TOKEN }}
+      Typically: secrets.GITHUB_TOKEN
     required: true
 
 outputs:
