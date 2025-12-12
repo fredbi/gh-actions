@@ -76,7 +76,11 @@ A vulnerability scan on the source repo of the tools must be passed for such an 
 - uses: go-openapi/gh-actions/ci-jobs/wait-pending-jobs@v0.2.0
   with:
     pr-url: ${{ github.event.pull_request.html_url }}
-    gh-token: ${{ secrets.GITHUB_TOKEN }}
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    # Optional: exclude the current run (default: true)
+    exclude-current-run: 'true'
+    # Optional: patterns to match workflow names for exclusion (default: 'auto-merge,contributors')
+    exclude-workflow-patterns: 'auto-merge,release'
 ```
 
 ### Background
@@ -87,6 +91,13 @@ This action solves a timing issue where:
 2. Non-required jobs (like coverage upload) are still running
 3. The PR gets merged and branch deleted while jobs are still in progress
 4. Running jobs fail because the branch no longer exists
+
+When multiple jobs in the same workflow use this action in parallel (e.g., both `dependabot` and `actions-bot` jobs), they can end up waiting for each other. The action includes smart defaults to prevent deadlocks:
+
+* `exclude-current-run`: Automatically excludes the current workflow run from the wait list (default: `true`)
+* `exclude-workflow-patterns`: Case-insensitive pattern matching against workflow names (default: `'auto-merge,contributors'`)
+  - Patterns use substring matching: `'auto-merge'` matches `'Dependabot auto-merge'`, `'PR auto-merge'`, etc.
+  - Override the default by providing your own comma-separated list of patterns
 
 ## Change log
 

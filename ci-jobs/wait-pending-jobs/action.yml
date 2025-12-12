@@ -35,6 +35,31 @@ inputs:
       Default: 10
     required: false
     default: '10'
+  exclude-current-run:
+    description: |
+      Whether to exclude the current workflow run from the wait list.
+
+      This prevents the job from waiting for itself when multiple jobs
+      use this action in parallel.
+
+      Default: true
+    required: false
+    default: 'true'
+  exclude-workflow-patterns:
+    description: |
+      Comma-separated list of patterns to match against workflow names for exclusion.
+
+      Workflows whose names contain any of these patterns (case-insensitive) will be
+      excluded from the wait list. This is useful when multiple jobs in the same
+      workflow use this action, preventing them from waiting for each other.
+
+      Default patterns exclude common workflows that typically call this action:
+      - 'auto-merge': matches 'Dependabot auto-merge', 'PR auto-merge', etc.
+      - 'contributors': matches 'Update contributors', etc.
+
+      Example: 'auto-merge,release,ci'
+    required: false
+    default: 'auto-merge,contributors'
   github-token:
     description: |
       GitHub token with permissions to read workflow runs.
@@ -62,6 +87,9 @@ runs:
         PR_URL: ${{ inputs.pr-url }}
         MAX_WAIT: ${{ inputs.max-wait-seconds }}
         SLEEP_INTERVAL: ${{ inputs.poll-interval-seconds }}
+        EXCLUDE_CURRENT: ${{ inputs.exclude-current-run }}
+        EXCLUDE_PATTERNS: ${{ inputs.exclude-workflow-patterns }}
+        CURRENT_RUN_ID: ${{ github.run_id }}
         GH_TOKEN: ${{ inputs.github-token }}
       run: |
         PR_NUMBER=$(echo "${PR_URL}" | grep -oP '\d+$')
@@ -71,11 +99,36 @@ runs:
         HEAD_SHA=$(gh pr view "${PR_NUMBER}" --json headRefOid --jq '.headRefOid')
         echo "Head SHA: ${HEAD_SHA}"
 
+        # Build jq filter to exclude runs based on inputs
+        JQ_FILTER='.'
+
+        # Exclude current run if requested
+        if [ "${EXCLUDE_CURRENT}" = "true" ]; then
+          echo "Excluding current run ID: ${CURRENT_RUN_ID}"
+          JQ_FILTER="${JQ_FILTER} | select(.id != ${CURRENT_RUN_ID})"
+        fi
+
+        # Exclude workflows matching any of the patterns (case-insensitive)
+        if [ -n "${EXCLUDE_PATTERNS}" ]; then
+          echo "Excluding workflows matching patterns: ${EXCLUDE_PATTERNS}"
+          # Convert comma-separated list to array
+          IFS=',' read -ra PATTERN_ARRAY <<< "${EXCLUDE_PATTERNS}"
+          for pattern in "${PATTERN_ARRAY[@]}"; do
+            # Trim whitespace and convert to lowercase for case-insensitive matching
+            pattern=$(echo "${pattern}" | xargs | tr '[:upper:]' '[:lower:]')
+            # Use jq to check if workflow name contains the pattern (case-insensitive)
+            JQ_FILTER="${JQ_FILTER} | select((.name | ascii_downcase | contains(\"${pattern}\")) | not)"
+          done
+        fi
+
         ELAPSED=0
 
         while [ $ELAPSED -lt $MAX_WAIT ]; do
           # Get all workflow runs for this SHA using the GitHub API
-          RUNS=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=${HEAD_SHA}&per_page=100" --jq '.workflow_runs')
+          ALL_RUNS=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=${HEAD_SHA}&per_page=100" --jq '.workflow_runs')
+
+          # Apply exclusion filters
+          RUNS=$(echo "${ALL_RUNS}" | jq "[.[] | ${JQ_FILTER}]")
 
           # Count how many are still in progress, queued, or waiting
           IN_PROGRESS=$(echo "${RUNS}" | jq '[.[] | select(.status == "in_progress" or .status == "queued" or .status == "waiting")] | length')
