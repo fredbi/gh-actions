@@ -55,7 +55,9 @@ outputs:
 
   bash-subpaths:
     description: |
-      A bash-compatible array of modules paths with the "/..." suffix.
+      A bash-compatible array of modules relative paths with the "/..." suffix.
+
+      There a relative paths to module folders like "./...", "./jsonutils/...".
 
       The bash-compatible list is a list of blank separated, unquoted strings.
       It is exposed to classical shell-escaping issues.
@@ -109,8 +111,8 @@ runs:
         # Might need to add jq filter @sh if escaping becomes a problem, at the expanse of more complex output handling.
         bash_paths=$(echo "${list}" | jq -r '.path'|tr '\n' ' '|sed -E 's/\s{2,}/ /g'|sed -E 's/\s+$//')
         bash_relative_names=$(echo "${modules}"|jq -r --arg ROOT "${root}" '.[]|.name|ltrimstr($ROOT)|ltrimstr("/")|sub("^$";"{root}")'|tr '\n' ' '|sed -E 's/\s+/ /g'|sed -E 's/\s+$//')
-        # subpaths are designated to match with go test syntax, e.g. {path}/...
-        bash_subpaths=$(echo "${list}" | jq -r '.path+"/..."'|tr '\n' ' '|sed -E 's/\s{2,}/ /g'|sed -E 's/\s+$//')
+        # subpaths are designated to match with go test syntax, e.g. {relative path}/...
+        bash_subpaths=$(echo "${list}" | jq -r --arg ROOT $(pwd) '.path+"/..."|ltrimstr($ROOT)|gsub("^";".")'|tr '\n' ' '|sed -E 's/\s{2,}/ /g'|sed -E 's/\s+$//')
 
         echo "modules=${modules}" >> "${GITHUB_OUTPUT}"
         echo "::notice title=modules::${modules}"
