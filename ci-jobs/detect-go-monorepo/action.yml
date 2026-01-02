@@ -135,10 +135,10 @@ runs:
         echo "modules-count=${count}" >> "${GITHUB_OUTPUT}"
         echo "::notice title=modules-count::${count}"
 
-        echo "relative-name=${relative_names}" >> "${GITHUB_OUTPUT}"
+        echo "relative-names=${relative_names}" >> "${GITHUB_OUTPUT}"
         echo "::notice title=relative-names::${relative_names}"
 
-        echo "bash-relative-name=${bash_relative_names}" >> "${GITHUB_OUTPUT}"
+        echo "bash-relative-names=${bash_relative_names}" >> "${GITHUB_OUTPUT}"
         echo "::notice title=bash_relative-names::${bash_relative_names}"
 
         if [[ "${count}" -gt 1 ]] ; then
