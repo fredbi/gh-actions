@@ -33,7 +33,7 @@ outputs:
   next-tag:
     description: |
       The bumped release tag.
-    value: ${{ steps.bump-release.next-tag }}
+    value: ${{ steps.bump-release.outputs.next-tag }}
 
 runs:
   using: composite
