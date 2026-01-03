@@ -70,7 +70,7 @@ runs:
       name: Install svu
       uses: ./install/svu
       with:
-        version: ${{ inputs.version-go-ctrf-json-reporter }}
+        version: ${{ inputs.version-svu }}
 
 branding:
   icon: 'package'
