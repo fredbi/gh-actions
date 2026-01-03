@@ -96,58 +96,13 @@ runs:
       id: detect-monorepo
       shell: bash
       run: |
-        root=$(go list)
-        list=$(go list -m -f '{"name":{{ printf "%q" .Path }},"path":{{ printf "%q" .Dir }}}')
-        count=$(echo "${list}"|wc -l)
+        # Use go-monorepo-detector binary (replaces 55 lines of bash+jq)
+        go-monorepo-detector -format github-actions >> "${GITHUB_OUTPUT}"
 
-        # JSON output
-        modules=$(echo "${list}"|jq -sc) # single-line JSON
-        paths=$(echo "${list}"|jq -sc 'map(.path)')
-        names=$(echo "${list}"|jq -sc 'map(.name)')
-        relative_names=$(echo "${modules}"|jq -c --arg ROOT "${root}" '[.[]|.name|ltrimstr($ROOT)|ltrimstr("/")]')
-
-        # bash-compatible outputs
-        # - space-separated, unquoted strings (like for a bash array). Sensitive to classical shell escaping issues.
-        # Might need to add jq filter @sh if escaping becomes a problem, at the expanse of more complex output handling.
-        bash_paths=$(echo "${list}" | jq -r '.path'|tr '\n' ' '|sed -E 's/\s{2,}/ /g'|sed -E 's/\s+$//')
-        bash_relative_names=$(echo "${modules}"|jq -r --arg ROOT "${root}" '.[]|.name|ltrimstr($ROOT)|ltrimstr("/")|sub("^$";"{root}")'|tr '\n' ' '|sed -E 's/\s+/ /g'|sed -E 's/\s+$//')
-        # subpaths are designated to match with go test syntax, e.g. {relative path}/...
-        bash_subpaths=$(echo "${list}" | jq -r --arg ROOT $(pwd) '.path+"/..."|ltrimstr($ROOT)|gsub("^";".")'|tr '\n' ' '|sed -E 's/\s{2,}/ /g'|sed -E 's/\s+$//')
-
-        echo "modules=${modules}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=modules::${modules}"
-
-        echo "root-module=${root}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=root-module::${root}"
-
-        echo "paths=${paths}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=paths::${paths}"
-
-        echo "bash-paths=${bash_paths}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=bash-paths::${bash_paths}"
-
-        echo "bash-subpaths=${bash_subpaths}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=bash-subpaths::${bash_subpaths}"
-
-        echo "names=${names}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=names::${names}"
-
-        echo "modules-count=${count}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=modules-count::${count}"
-
-        echo "relative-names=${relative_names}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=relative-names::${relative_names}"
-
-        echo "bash-relative-names=${bash_relative_names}" >> "${GITHUB_OUTPUT}"
-        echo "::notice title=bash_relative-names::${bash_relative_names}"
-
-        if [[ "${count}" -gt 1 ]] ; then
-          echo "is-monorepo=true" >> "${GITHUB_OUTPUT}"
-          echo "::notice title=is-monorepo::true"
-        else
-          echo "is-monorepo=false" >> "${GITHUB_OUTPUT}"
-          echo "::notice title=is-monorepo::false"
-        fi
+        # Output notices for visibility
+        while IFS='=' read -r key value; do
+          echo "::notice title=${key}::${value}"
+        done < "${GITHUB_OUTPUT}"
 
 branding:
   icon: 'key'

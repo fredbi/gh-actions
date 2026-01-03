@@ -47,10 +47,9 @@ runs:
       shell: bash
       env:
         TOOL: go-ctrf-json-reporter
-        VERSION_RESOLVER: '${{ github.action_path }}/../../get-tool-version.sh'
       run: |
         if [[ '${{ !inputs.version }}' == 'true' || '${{ inputs.version }}' == 'auto' ]] ; then
-            VERSION=$("${VERSION_RESOLVER}" "${TOOL}")
+            VERSION=$(go-mod-version -tool "${TOOL}")
         else
           VERSION='${{ inputs.version }}'
         fi

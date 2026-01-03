@@ -20,6 +20,10 @@ Tools are installed via downloaded binary releases, not `go install`. The versio
 
 - `install/*/action.yml`: Individual tool installer actions (gotestsum, go-junit-report, go-ctrf-json-reporter, svu)
 - `ci-jobs/wait-pending-jobs/action.yml`: Reusable action to wait for all workflow runs on a PR's head SHA to complete
+- `ci-jobs/detect-go-version/action.yml`: Detects installed Go version and feature support (e.g., "go test work" for go1.25+)
+- `ci-jobs/bot-credentials/action.yml`: Configures bot credentials for GPG signing and GitHub App authentication
+- `ci-jobs/detect-go-monorepo/action.yml`: Detects Go mono-repos with multiple modules and outputs module information in various formats
+- `ci-jobs/next-tag/action.yml`: Determines the next release version bump using svu
 - `action.yml`: Composite action that installs all tools at once
 - `get-tool-version.sh`: Bash script to resolve tool versions from go.mod without requiring Go installed
 

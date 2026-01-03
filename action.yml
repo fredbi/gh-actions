@@ -7,6 +7,18 @@ description: |
 author: go-openapi
 
 inputs:
+  install-go-mod-version:
+    default: 'true'
+    required: false
+    description: |
+      Install go-mod-version tool (used for version resolution).
+      This is typically always needed.
+  version-go-mod-version:
+    default: auto
+    required: false
+    description: |
+      The version to install specifically.
+      Defaults to 'auto': the version currenty released (see go.mod).
   install-gotestsum:
     default: 'true'
     required: false
@@ -47,7 +59,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - 
+    -
+      if: ${{ inputs.install-go-mod-version == 'true' }}
+      name: Install go-mod-version
+      uses: ./install/go-mod-version
+      with:
+        version: ${{ inputs.version-go-mod-version }}
+    -
       if: ${{ inputs.install-gotestsum == 'true' }}
       name: Install gotestsum
       uses: ./install/gotestsum
@@ -65,7 +83,7 @@ runs:
       uses: ./install/go-ctrf-json-reporter
       with:
         version: ${{ inputs.version-go-ctrf-json-reporter }}
-    - 
+    -
       if: ${{ inputs.install-svu == 'true' }}
       name: Install svu
       uses: ./install/svu

@@ -17,6 +17,7 @@ import (
 	_ "gotest.tools/gotestsum/cmd"
 	_ "gotest.tools/gotestsum/cmd/tool/matrix"
 	_ "gotest.tools/gotestsum/cmd/tool/slowest"
+	_ "golang.org/x/mod/modfile"
 )
 
 func main() {
