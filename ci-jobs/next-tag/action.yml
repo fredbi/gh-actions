@@ -49,11 +49,11 @@ runs:
         # determine next tag to push
         NEXT_TAG=""
         if   [[ '${{ inputs.bump-patch }}' == 'true' ]] ; then
-          NEXT_TAG=$(svu patch --tag-pattern 'v*')
+          NEXT_TAG=$(svu patch --tag.pattern 'v*')
         elif [[ '${{ inputs.bump-minor }}' == 'true' ]] ; then
-          NEXT_TAG=$(svu minor --tag-pattern 'v*')
+          NEXT_TAG=$(svu minor --tag.pattern 'v*')
         elif [[ '${{ inputs.bump-major }}' == 'true' ]] ; then
-          NEXT_TAG=$(svu major --tag-pattern 'v*')
+          NEXT_TAG=$(svu major --tag.pattern 'v*')
         else
           echo "::error::invalid options::One of bump-patch, bump-minor or bump-major must be true"
           exit 1
