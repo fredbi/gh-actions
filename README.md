@@ -414,7 +414,6 @@ This library ships under the [SPDX-License-Identifier: Apache-2.0](./LICENSE).
 * [Contributing guidelines][contributing-doc-site]
 * [Maintainers documentation][maintainers-doc-site]
 * [Code style][style-doc-site]
-* [Contributing guidelines](.github/CONTRIBUTING.md)
 
 ## Cutting a new release
 
