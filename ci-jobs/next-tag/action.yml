@@ -52,15 +52,21 @@ runs:
       run: |
         # determine next tag to push
         NEXT_TAG=""
-        if   [[ "${BUMP_PATCH}" == 'true' ]] ; then
-          NEXT_TAG=$(svu patch --tag.pattern 'v*')
-        elif [[ "${BUMP_MINOR}" == 'true' ]] ; then
-          NEXT_TAG=$(svu minor --tag.pattern 'v*')
-        elif [[ "${BUMP_MAJOR}" == 'true' ]] ; then
-          NEXT_TAG=$(svu major --tag.pattern 'v*')
+        CURRENT=$(svu current)
+        if [[ "${CURRENT}" == "v0.0.0" ]] ; then
+          # never been tagged before: initialize v0.0.1
+          NEXT_TAG="v0.0.1"
         else
-          echo "::error::invalid options::One of bump-patch, bump-minor or bump-major must be true"
-          exit 1
+          if   [[ "${BUMP_PATCH}" == 'true' ]] ; then
+            NEXT_TAG=$(svu patch --tag.pattern 'v*')
+          elif [[ "${BUMP_MINOR}" == 'true' ]] ; then
+            NEXT_TAG=$(svu minor --tag.pattern 'v*')
+          elif [[ "${BUMP_MAJOR}" == 'true' ]] ; then
+             NEXT_TAG=$(svu major --tag.pattern 'v*')
+          else
+            echo "::error::invalid options::One of bump-patch, bump-minor or bump-major must be true"
+            exit 1
+          fi
         fi
 
         if [[ -z "${NEXT_TAG}" ]] ; then
